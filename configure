@@ -1,0 +1,81 @@
+#!/bin/bash
+
+SERVICE_CODEDEPLOY_AGENT=codedeploy-agent
+if service ${SERVICE_CODEDEPLOY_AGENT} status | grep running
+then
+   service ${SERVICE_CODEDEPLOY_AGENT} stop
+fi
+
+SERVICE_AWSLOGS=awslogs
+if service ${SERVICE_AWSLOGS} status | grep running
+then
+   service ${SERVICE_AWSLOGS} stop
+fi
+
+if [ ! -d "/srv/codedeploy-agent" ]; then
+   mkdir /srv/codedeploy-agent
+fi
+
+if [ ! -d "/srv/codedeploy-agent/deployment-root" ]; then
+   mkdir /srv/codedeploy-agent/deployment-root
+fi
+
+if [ -d "/opt/codedeploy-agent/deployment-root" ]; then
+   rm -rf /opt/codedeploy-agent/deployment-root
+fi
+
+if [ ! -L "/opt/codedeploy-agent/deployment-root" ]; then
+   ln -s /srv/codedeploy-agent/deployment-root /opt/codedeploy-agent
+        chown -R 2450 /opt/codedeploy-agent/deployment-root
+        chgrp -R users /opt/codedeploy-agent/deployment-root
+        chown -R 2450 /srv/codedeploy-agent/deployment-root
+        chgrp -R users /srv/codedeploy-agent/deployment-root
+fi
+
+if [ -f "/etc/codedeploy-agent/conf/codedeployagent.yml" ]; then
+   rm /etc/codedeploy-agent/conf/codedeployagent.yml
+fi
+
+if [ ! -L "/etc/codedeploy-agent/conf/codedeployagent.yml" ]; then
+   ln -s /srv/config/codedeployagent.yml /etc/codedeploy-agent/conf
+fi
+
+if [ -f "/var/awslogs/etc/config/codedeploy_logs.conf" ]; then
+   rm /var/awslogs/etc/config/codedeploy_logs.conf
+fi
+
+if [ -L "/var/awslogs/etc/config/codedeploy_logs.conf" ]; then
+   ln -s /srv/config/codedeploy_logs.conf /var/awslogs/etc/config
+fi
+
+if [ ! -d "/srv/log" ]; then
+   mkdir /srv/log
+fi
+
+if [ ! -d "/srv/log/aws" ]; then
+   mkdir /srv/log/aws
+fi
+
+if [ ! -d "/srv/log/aws/codedeploy-agent" ]; then
+   mkdir /srv/log/aws/codedeploy-agent
+fi
+
+if [ ! -d "/srv/log/aws/codedeploy-agent/deployment-root" ]; then
+   mkdir /srv/log/aws/codedeploy-agent/deployment-root
+fi
+
+if [ ! -d "/srv/log/aws/codedeploy-agent/deployment-root/deployment-logs" ]; then
+   mkdir /srv/log/aws/codedeploy-agent/deployment-root/deployment-logs
+fi
+
+if [ ! -d "/srv/log/aws/codedeploy-agent/state" ]; then
+   mkdir /srv/log/aws/codedeploy-agent/state
+fi
+
+if [ ! -d "/srv/log/aws/codedeploy-agent/state/.pid" ]; then
+   mkdir /srv/log/aws/codedeploy-agent/state/.pid
+fi
+
+service codedeploy-agent restart
+
+service awslogs restart
